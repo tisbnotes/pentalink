@@ -4,13 +4,14 @@ Event = require 'lib/knife.event'
 Timer = require 'lib/knife.timer'
 
 require 'src/Util'
+require 'src/Graph'
+require 'src/constants'
 
 require 'src/states/BaseState'
 require 'src/states/StateStack'
 
 require 'src/states/game/StartState'
-
-require 'src/constants'
+require 'src/states/game/PlayState'
 
 gFonts = {
     ['small'] = love.graphics.newFont('fonts/Antaro.ttf', 8),
@@ -20,5 +21,6 @@ gFonts = {
 }
 
 gSounds = {
-    ['menu-select'] = love.audio.newSource('sounds/menu_select.wav')
+    ['menu-select'] = love.audio.newSource('sounds/menu_select.wav'),
+    ['deny-connection'] = love.audio.newSource('sounds/deny_connection.wav')
 }

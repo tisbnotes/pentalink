@@ -15,10 +15,16 @@ function StartState:update(dt)
         self.highlighted = (self.highlighted + 1) % #self.options
         gSounds['menu-select']:play()
     end
+
+    if love.keyboard.wasPressed('return') then
+        if self.highlighted == 0 then
+            gStateStack:pop()
+            gStateStack:push(PlayState())
+        end
+    end
 end
 
 function StartState:render()
-    print(self.options[self.highlighted+1])
     love.graphics.clear(240, 240, 255, 240)
 
     love.graphics.setFont(gFonts['medium'])

@@ -25,55 +25,74 @@ function deepcopy(orig)
     return copy
 end
 
---[[
-    Returns the length between two points on a 2D plane
-]]
-function point_length(x1, y1, x2, y2)
-    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+function compareTableElementsByLength(a, b)
+    return #a < #b
 end
 
-function slope(line)
-    return (line[2][1] - line[2][2]) / (line[1][1] - line[1][2])
+function deepcompare(t1,t2,ignore_mt)
+    local ty1 = type(t1)
+    local ty2 = type(t2)
+    if ty1 ~= ty2 then return false end
+    -- non-table types can be directly compared
+    if ty1 ~= 'table' and ty2 ~= 'table' then return t1 == t2 end
+    -- as well as tables which have the metamethod __eq
+    local mt = getmetatable(t1)
+    if not ignore_mt and mt and mt.__eq then return t1 == t2 end
+    for k1,v1 in pairs(t1) do
+        local v2 = t2[k1]
+        if v2 == nil or not deepcompare(v1,v2) then return false end
+    end
+    for k2,v2 in pairs(t2) do
+        local v1 = t1[k2]
+        if v1 == nil or not deepcompare(v1,v2) then return false end
+    end
+    return true
 end
 
-function lines_intersect(line1, line2)
-    p0_x = line1[1][1]
-    p0_y = line1[1][2]
+function table.removeElements(input, remove)
+    --[[
+    remove should be a boolean table whose keys are the elements to be removed, all values should be set to true
+    ]]
+    local n = #input
 
-    p1_x = line1[2][1]
-    p1_y = line1[2][2]
-
-    p2_x = line2[1][1]
-    p2_y = line2[1][2]
-
-    p3_x = line2[2][1]
-    p3_y = line2[2][2]
-
-    s1_x = p1_x - p0_x
-    s1_y = p1_y - p0_y
-    s2_x = p3_x - p2_x
-    s2_y = p3_y - p2_y
-
-    s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y)
-    t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y)
-
-    if (s > 0 and s < 1 and t > 0 and t < 1) then
-        return true
+    for i = 1, n do
+        if remove[input[i]] then
+            input[i] = nil
+        end
     end
 
-
-    m1 = slope(line1)
-    m2 = slope(line2)
-
-    c1 = line1[2][2] - m1 * line1[2][1]
-    c2 = line2[2][2] - m2 * line2[2][1]
-
-    if m1 == m2 and c1 == c2 then
-        return true
+    local j = 0
+    for i = 1, n do
+        if input[i] ~= nil then
+            j = j + 1
+            input[j] = input[i]
+        end
     end
+    for i = j + 1, n do
+        input[i] = nil
+    end
+end
 
+function table.contains(tbl, item)
+    for key, value in pairs(tbl) do
+        if deepcompare(value,item) then return true end
+    end
     return false
+end
 
+function table.concatenate(t1, t2)
+    for i = 1, #t2 do
+        t1[#t1 + 1] = t2[i]
+    end
+    return t1
+end
+
+function table.reverse(tbl)
+    local new = {}
+    for i = #tbl, 1, - 1 do
+        table.insert(new, tbl[i])
+    end
+    return new
 end
 
 --[[

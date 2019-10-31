@@ -3,7 +3,7 @@ require 'src/Dependencies'
 function love.load()
     love.physics.setMeter(METRE_LENGTH)
     love.window.setTitle('Pentalink')
-    love.graphics.setDefaultFilter('nearest', 'nearest')
+    love.graphics.setDefaultFilter('linear', 'linear')
 
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,

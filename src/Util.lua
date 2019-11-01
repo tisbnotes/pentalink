@@ -1,14 +1,40 @@
 --[[
-    GD50
-    Super Mario Bros. Remake
-
-    -- StartState Class --
-
-    Author: Colton Ogden
-    cogden@cs50.harvard.edu
-
-    Helper functions for writing Match-3.
+    Helper functions.
 ]]
+
+function translatePoints(points, dx, dy, scale)
+    for i,point in pairs(points) do
+        points[i][1] = math.floor(point[1]*scale + dx)
+        points[i][2] = math.floor(point[2]*scale + dy)
+    end
+end
+
+function getNewCycles(a, b)
+    r = {}
+    if #b == 0 then
+        return deepcopy(a)
+    end
+    for k,c1 in pairs(a) do
+        local contains = false
+        for k,c2 in pairs(b) do
+            if sameElements(c1, c2) then
+                contains = true
+                break
+            end
+        end
+        if not contains then
+            table.insert(r, c1)
+        end
+    end
+    return r
+    -- local ai = {}
+    -- local r = {}
+    -- for k,v in pairs(a) do r[k] = v; ai[v]=true end
+    -- for k,v in pairs(b) do
+    --     if ai[v]~=nil then   r[k] = nil   end
+    -- end
+    -- return r
+end
 
 function deepcopy(orig)
     local orig_type = type(orig)
@@ -81,10 +107,11 @@ function table.contains(tbl, item)
 end
 
 function table.concatenate(t1, t2)
+    k = deepcopy(t1)
     for i = 1, #t2 do
-        t1[#t1 + 1] = t2[i]
+        k[#k + 1] = t2[i]
     end
-    return t1
+    return k
 end
 
 function table.reverse(tbl)
@@ -155,4 +182,73 @@ function print_r ( t )
         sub_print_r(t, "  ")
     end
     print()
+end
+
+--[[
+    Returns the length between two points on a 2D plane
+]]
+function point_length(x1, y1, x2, y2)
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+end
+
+function slope(line)
+    return (line[2][2] - line[1][2]) / (line[2][1] - line[1][1])
+end
+
+function isSubsetOf(t1, t2)
+    for i,v1 in pairs(t2) do
+        if not table.contains(t1, v1) then
+            return false
+        end
+    end
+    return true
+end
+
+function lines_intersect(line1, line2, endpoints)
+    endpoints = endpoints or false
+    m1 = slope(line1)
+    m2 = slope(line2)
+    c1 = line1[2][2] - m1 * line1[2][1]
+    c2 = line2[2][2] - m2 * line2[2][1]
+
+    if m1 == m2 and c1 == c2 and m1 ~= 0 and math.abs(m1) ~= math.huge then
+        return false
+    end
+
+    p0_x = line1[1][1]
+    p0_y = line1[1][2]
+
+    p1_x = line1[2][1]
+    p1_y = line1[2][2]
+
+    p2_x = line2[1][1]
+    p2_y = line2[1][2]
+
+    p3_x = line2[2][1]
+    p3_y = line2[2][2]
+
+    s1_x = p1_x - p0_x
+    s1_y = p1_y - p0_y
+    s2_x = p3_x - p2_x
+    s2_y = p3_y - p2_y
+
+    s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y)
+    t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y)
+
+    if endpoints then
+        if (s >= 0 and s <= 1 and t >= 0 and t <= 1) then
+            return true
+        end
+    else
+        if (s > 0 and s < 1 and t >= 0 and t <= 1) then
+            return true
+        end
+    end
+
+    return false
+
+end
+
+function sameElements(t1, t2)
+    return isSubsetOf(t1, t2) and isSubsetOf(t2, t1)
 end

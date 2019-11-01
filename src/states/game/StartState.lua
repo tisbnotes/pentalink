@@ -19,7 +19,7 @@ function StartState:update(dt)
     if love.keyboard.wasPressed('return') then
         if self.highlighted == 0 then
             gStateStack:pop()
-            gStateStack:push(PlayState())
+            gStateStack:push(PlayState(4))
         end
     end
 end

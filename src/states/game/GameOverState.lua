@@ -5,7 +5,7 @@ function GameOverState:init(winningPlayer, bestPlayersArea, players)
     self.bestPlayersArea = bestPlayersArea
     self.players = players
 
-    self.width = gFonts['medium']:getWidth("Player 1 Wins!")*1.5
+    self.width = gFonts['medium']:getWidth("Player 1 Wins!") * 1.5
 
     local y = 10 + gFonts['medium-bigger']:getHeight() + 90
     for i, player in pairs(self.players) do
@@ -49,8 +49,8 @@ function GameOverState:render()
         love.graphics.printf('Player ' .. tostring(i), self.x, y + 10, self.width, 'left')
 
         love.graphics.setFont(gFonts['small'])
-        love.graphics.printf('Points: ' .. tostring(self.players[i].points - points), self.x, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
         if table.contains(bestPlayersArea, i) then
+            love.graphics.printf('Points: ' .. tostring(self.players[i].points - points), self.x, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
             love.graphics.setColor(0, 166, 6)
             xoffset = gFonts['small']:getWidth('Points: ' .. tostring(self.players[i].points - points))
             love.graphics.printf(' + ' .. tostring(points), self.x + xoffset, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
@@ -58,6 +58,8 @@ function GameOverState:render()
             love.graphics.setColor(0, 0, 0)
             xoffset = xoffset + gFonts['small']:getWidth(' + ' .. tostring(points))
             love.graphics.printf(' = ' .. tostring(self.players[i].points), self.x + xoffset, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
+        else
+            love.graphics.printf('Points: ' .. tostring(self.players[i].points), self.x, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
         end
         love.graphics.printf('Area: ' .. tostring(self.players[i].pentagonArea), self.x, y + 10 + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), self.width, 'left')
         y = y + 10 + gFonts['medium']:getHeight() + gFonts['small']:getHeight() + 20

@@ -19,6 +19,8 @@ function Player:update(shapes)
             self.points = self.points + HEXAGON_POINTS
         elseif #c == 7 then
             self.points = self.points + HEPTAGON_POINTS
+        elseif #c >= 8 then
+            self.points = -9 - 3*(#c - 8)
         end
     end
 end

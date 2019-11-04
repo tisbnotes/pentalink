@@ -1,23 +1,24 @@
 GameOverState = Class{__includes = BaseState}
 
-function GameOverState:init(winningPlayer, players)
+function GameOverState:init(winningPlayer, bestPlayersArea, players)
     self.winningPlayer = winningPlayer
+    self.bestPlayersArea = bestPlayersArea
     self.players = players
 
-    self.width = VIRTUAL_WIDTH/2
+    self.width = gFonts['medium']:getWidth("Player 1 Wins!")*1.5
 
     local y = 10 + gFonts['medium-bigger']:getHeight() + 90
-    for i,player in pairs(self.players) do
+    for i, player in pairs(self.players) do
         y = y + 10 + gFonts['medium']:getHeight() + gFonts['small']:getHeight() + 20
     end
 
     self.height = y
 
-    self.x = 0 + self.width/2
+    self.x = (VIRTUAL_WIDTH - self.width) / 2
     self.y = -self.height
     self.exitable = false
     Timer.tween(2, {
-        [self] = {y = (VIRTUAL_HEIGHT - self.height)/2},
+        [self] = {y = (VIRTUAL_HEIGHT - self.height) / 2},
     }):finish(function() self.exitable = true end)
 end
 
@@ -35,25 +36,35 @@ function GameOverState:render()
     love.graphics.setColor(245, 245, 245, 255)
     love.graphics.rectangle('fill', self.x, self.y, self.width, self.height, 10)
 
-love.graphics.setColor(0, 0, 0, 255)
-    love.graphics.setFont(gFonts['medium-bigger'])
-    love.graphics.printf('Player ' .. tostring(self.winningPlayer) .. ' wins!', self.x, self.y + 10, self.width, 'center')
+    self.x = self.x + 10
 
-    -- love.graphics.setFont(gFonts['small'])
-    -- love.graphics.printf('Points: ' .. tostring(self.players[self.winningPlayer].points), self.x, self.y + 10 + gFonts['medium-bigger']:getHeight(), self.width, 'center')
-    -- love.graphics.printf('Area: ' .. tostring(self.players[self.winningPlayer].pentagonArea), self.x, self.y + 10 + gFonts['medium-bigger']:getHeight() + gFonts['small']:getHeight(), self.width, 'center')
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.setFont(gFonts['medium-bigger'])
+    love.graphics.printf('Player ' .. tostring(self.winningPlayer) .. ' wins!', self.x, self.y + 10, self.width, 'left')
 
     local y = self.y + 10 + gFonts['medium-bigger']:getHeight() + 20
-    for i,player in pairs(self.players) do
+    local points = #self.bestPlayersArea == 1 and 3 or 2
+    for i, player in pairs(self.players) do
         love.graphics.setFont(gFonts['medium'])
-        love.graphics.printf('Player ' .. tostring(i), self.x, y + 10, self.width, 'center')
+        love.graphics.printf('Player ' .. tostring(i), self.x, y + 10, self.width, 'left')
 
         love.graphics.setFont(gFonts['small'])
-        love.graphics.printf('Points: ' .. tostring(self.players[i].points), self.x, y + 10 + gFonts['medium']:getHeight(), self.width, 'center')
-        love.graphics.printf('Area: ' .. tostring(self.players[i].pentagonArea), self.x, y + 10 + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), self.width, 'center')
+        love.graphics.printf('Points: ' .. tostring(self.players[i].points - points), self.x, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
+        if table.contains(bestPlayersArea, i) then
+            love.graphics.setColor(0, 166, 6)
+            xoffset = gFonts['small']:getWidth('Points: ' .. tostring(self.players[i].points - points))
+            love.graphics.printf(' + ' .. tostring(points), self.x + xoffset, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
+
+            love.graphics.setColor(0, 0, 0)
+            xoffset = xoffset + gFonts['small']:getWidth(' + ' .. tostring(points))
+            love.graphics.printf(' = ' .. tostring(self.players[i].points), self.x + xoffset, y + 10 + gFonts['medium']:getHeight(), self.width, 'left')
+        end
+        love.graphics.printf('Area: ' .. tostring(self.players[i].pentagonArea), self.x, y + 10 + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), self.width, 'left')
         y = y + 10 + gFonts['medium']:getHeight() + gFonts['small']:getHeight() + 20
     end
 
     y = y + 20
     love.graphics.printf("Press 'Enter' to return to menu", self.x, y + 20, self.width, 'center')
+
+    self.x = self.x - 10
 end

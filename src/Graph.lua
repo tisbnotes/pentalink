@@ -190,10 +190,11 @@ function minimum_cycle_basis(G)
 end
 
 function lines_set(cycle)
-    lines = {{cycle[1], cycle[#cycle]}, }
+    lines = {}
     for i = 1, #cycle - 1 do
         table.insert(lines, {cycle[i], cycle[i + 1]})
     end
+    table.insert(lines, {cycle[1], cycle[#cycle]})
     return lines
 end
 

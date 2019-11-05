@@ -1,8 +1,7 @@
 PlayState = Class{__includes = BaseState}
 
-function PlayState:init(numPlayers)
-    print("Number of players: " .. tostring(numPlayers))
-    self.level = generateLevel(2)
+function PlayState:init(numPlayers, levelNum)
+    self.level = generateLevel(levelNum)
 
     self.playerTriangle = Triangle(gFonts['medium']:getWidth('Player 1   '), 0, 25, gFonts['medium']:getHeight() - 10)
 
@@ -25,29 +24,25 @@ function PlayState:init(numPlayers)
     end
     self.currentPlayer = 1
 
-    self.gameArea = shoelace(points_set(self.level.figure_path))
-    print("Total area of game: ", self.gameArea)
-    -- self.gameArea = 0
-
     self.cycles = {}
     self.graph = Graph(nodeNumbers)
-    self.graph.points = gPoints
 
-    for i = 1, #self.graph.points, 2 do
-        self.graph:add_edge(i, i + 1)
-        -- table.insert(self.lines, {i, i + 1})
+    for i,edge in pairs(self.level.edges) do
+        self.graph:add_edge(edge[1], edge[2])
     end
 
     self.selected = nil
-    self.ver = false
 end
 
 function PlayState:checkGameOver()
-    totalArea = 0
-    for i, c in pairs(self.cycles) do
-        totalArea = totalArea + shoelace(points_set(c))
+    for n1=1,#gPoints do
+        for n2=1,#gPoints do
+            if n1 ~= n2 and self:validLine({n1, n2}) then
+                return false
+            end
+        end
     end
-    return totalArea == self.gameArea
+    return true
 end
 
 function line_distance(a, b)
@@ -79,8 +74,8 @@ function PlayState:validLine(line1)
         if (line1[1] == line2[1] and line1[2] == line2[2]) or (line1[2] == line2[1] and line1[1] == line2[2]) then
             return false
         end
-        coordinateLine1 = deepcopy({self.graph.points[line1[1]], self.graph.points[line1[2]]})
-        coordinateLine2 = deepcopy({self.graph.points[line2[1]], self.graph.points[line2[2]]})
+        coordinateLine1 = deepcopy({gPoints[line1[1]], gPoints[line1[2]]})
+        coordinateLine2 = deepcopy({gPoints[line2[1]], gPoints[line2[2]]})
 
         if lines_intersect(coordinateLine1, coordinateLine2) then
             return false
@@ -139,7 +134,7 @@ function PlayState:update(dt)
     if love.mouse.keysPressed[1] and not self.gameover then
         if self.selected then
             local other = nil
-            for i, point in pairs(self.graph.points) do
+            for i, point in pairs(gPoints) do
                 if point_length(mouseX, mouseY, point[1], point[2]) <= POINT_HITBOX then
                     other = i
                 end
@@ -203,7 +198,7 @@ function PlayState:update(dt)
             end
             self.selected = nil
         else
-            for i, point in pairs(self.graph.points) do
+            for i, point in pairs(gPoints) do
                 if point_length(mouseX, mouseY, point[1], point[2]) <= POINT_HITBOX then
                     self.selected = i
                 end
@@ -240,10 +235,10 @@ function PlayState:render()
         shiftY = gFonts['medium']:getHeight()
 
         for i, line in pairs(self.graph.edges) do
-            love.graphics.line(self.graph.points[line[1]][1], self.graph.points[line[1]][2], self.graph.points[line[2]][1], self.graph.points[line[2]][2])
+            love.graphics.line(gPoints[line[1]][1], gPoints[line[1]][2], gPoints[line[2]][1], gPoints[line[2]][2])
         end
 
-        for i, point in pairs(self.graph.points) do
+        for i, point in pairs(gPoints) do
             if self.selected == i then
                 love.graphics.setColor(255, 0, 0)
             else

@@ -17,16 +17,19 @@ function GameOverState:init(winningPlayer, bestPlayersArea, players)
     self.x = (VIRTUAL_WIDTH - self.width) / 2
     self.y = -self.height
     self.exitable = false
-    Timer.tween(2, {
+    Timer.tween(1, {
         [self] = {y = (VIRTUAL_HEIGHT - self.height) / 2},
     }):finish(function() self.exitable = true end)
 end
 
 function GameOverState:update(dt)
     if self.exitable and love.keyboard.wasPressed('return') then
-        gStateStack:pop()
-        gStateStack:pop()
-        gStateStack:push(StartState())
+        gStateStack:push(FadeInState({r = 255, g = 255, b = 255}, 0.25, function()
+            gStateStack:pop()
+            gStateStack:pop()
+            gStateStack:push(StartState())
+            gStateStack:push(FadeOutState({r = 255, g = 255, b = 255}, 0.5, function() end))
+        end))
     end
 end
 

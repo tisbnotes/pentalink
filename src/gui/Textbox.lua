@@ -68,7 +68,7 @@ function Textbox:isClosed()
 end
 
 function Textbox:render()
-    self.panel:render()
+    -- self.panel:render()
 
     love.graphics.setFont(self.font)
     for i = 1, #self.displayingChunks do

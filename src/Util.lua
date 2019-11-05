@@ -9,6 +9,18 @@ function translatePoints(points, dx, dy, scale)
     end
 end
 
+function scaleIncrement(value, lower, upper, incr)
+    if incr > 0 then
+        value = math.max(lower, (value + incr)%(upper + 1))
+    elseif incr < 0 then
+        value = (value + incr) % (upper + 1)
+        while value <= 0 do
+            value = value + upper
+        end
+    end
+    return value
+end
+
 function getNewCycles(a, b)
     r = {}
     if #b == 0 then

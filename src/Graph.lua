@@ -16,6 +16,7 @@ function Graph:init(nodes)
     for i, node in pairs(nodes) do
         self.nodes[node] = {}
     end
+    -- print_r(self.nodes)
 end
 
 function Graph:add_edge(n1, n2, c)
@@ -157,8 +158,6 @@ function minimum_cycle_basis(G)
             end
         end
     end
-
-    print()
 
     local remove = {}
 

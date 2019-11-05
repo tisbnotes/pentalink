@@ -1,6 +1,11 @@
 function generateLevel(n)
+    print(n)
+    local level = {
+        ['points'] = {},
+        ['edges'] = {}
+    }
     if n == 1 then
-        return {
+        level = {
             ['points'] = {
                 {2 / 10 * VIRTUAL_WIDTH, 1 / 6 * VIRTUAL_HEIGHT},
                 {4 / 10 * VIRTUAL_WIDTH, 1 / 6 * VIRTUAL_HEIGHT},
@@ -23,12 +28,12 @@ function generateLevel(n)
                 {9 / 10 * VIRTUAL_WIDTH, 3 / 12 * VIRTUAL_HEIGHT},
                 {9 / 10 * VIRTUAL_WIDTH, 9 / 12 * VIRTUAL_HEIGHT}
             },
-            ['figure_path'] = {1, 2, 3, 4, 13, 14, 8, 7, 6, 5, 10, 9}
+            ['edges'] = {
+            }
         }
     elseif n == 2 then
-        return {
+        level = {
             ['points'] = {
-                -- horizontal bars
                 {2 / 8 * VIRTUAL_WIDTH, 1 / 8 * VIRTUAL_HEIGHT},
                 {3 / 8 * VIRTUAL_WIDTH, 1 / 8 * VIRTUAL_HEIGHT},
 
@@ -71,8 +76,24 @@ function generateLevel(n)
                 {7 / 8 * VIRTUAL_WIDTH, 5 / 8 * VIRTUAL_HEIGHT},
                 {7 / 8 * VIRTUAL_WIDTH, 6 / 8 * VIRTUAL_HEIGHT},
             },
-
-            ['figure_path'] = {1, 2, 3, 4, 21, 22, 23, 24, 12, 11, 10, 9, 16, 15, 14, 13}
+            ['edges'] = {
+            }
         }
+    elseif n == NUM_LEVELS then
+        nPoints = 20
+        level = {
+            ['points'] = {},
+            ['edges'] = {}
+        }
+        for i = 1, nPoints do
+            table.insert(level.points, {math.random(0, VIRTUAL_WIDTH), math.random(0, VIRTUAL_HEIGHT)})
+        end
+
+        return level
     end
+
+    for i = 1, #level.points, 2 do
+        table.insert(level.edges, {i, i + 1})
+    end
+    return level
 end

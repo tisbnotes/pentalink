@@ -12,10 +12,17 @@ function PlayState:init(numPlayers, levelNum)
         table.insert(nodeNumbers, i)
     end
 
-    shiftX = gFonts['medium']:getWidth('Player 1')
+    shiftX = gFonts['medium']:getWidth('Player 1') * 1.25
     scale = (VIRTUAL_WIDTH - shiftX) / VIRTUAL_WIDTH
     shiftY = VIRTUAL_HEIGHT - VIRTUAL_HEIGHT * scale
     translatePoints(gPoints, shiftX, shiftY, scale)
+
+    self.numInStreak = 0
+    self.streakStarter = nil
+    self.lastPlayer = nil
+    self.moveNum = 1
+
+    self.pointLog = {}
 
     self.numPlayers = numPlayers
     self.players = {}
@@ -27,7 +34,7 @@ function PlayState:init(numPlayers, levelNum)
     self.cycles = {}
     self.graph = Graph(nodeNumbers)
 
-    for i,edge in pairs(self.level.edges) do
+    for i, edge in pairs(self.level.edges) do
         self.graph:add_edge(edge[1], edge[2])
     end
 
@@ -35,8 +42,8 @@ function PlayState:init(numPlayers, levelNum)
 end
 
 function PlayState:checkGameOver()
-    for n1=1,#gPoints do
-        for n2=1,#gPoints do
+    for n1 = 1, #gPoints do
+        for n2 = 1, #gPoints do
             if n1 ~= n2 and self:validLine({n1, n2}) then
                 return false
             end
@@ -60,9 +67,9 @@ function PlayState:validLine(line1)
     a = gPoints[line1[1]]
     c = gPoints[line1[2]]
 
-    local midpoint = {(a[1] + c[1])/2, (a[2] + c[2])/2}
+    local midpoint = {(a[1] + c[1]) / 2, (a[2] + c[2]) / 2}
 
-    for i,c in pairs(self.cycles) do
+    for i, c in pairs(self.cycles) do
         v = getVertices(c)
         if pointInPolygon(midpoint, v) then
             return false
@@ -152,30 +159,52 @@ function PlayState:update(dt)
 
                     local newCycles = getNewCycles(nextCycles, self.cycles)
 
+                    local pentagonExists = false
                     for i, c in pairs(newCycles) do
                         table.insert(self.cycles, c)
+                        if #c == 5 then
+                            pentagonExists = true
+                        end
+                        sign = (shapepoints(c) and shapepoints(c) > 0) and '+' or ''
+                        table.insert(self.pointLog, {
+                            ['move'] = self.moveNum,
+                            ['player'] = self.currentPlayer,
+                            ['points'] = shapepoints(c) or 0
+                        })
+                    end
+
+                    if pentagonExists then
+                        if self.numInStreak == 0 then
+                            self.streakStarter = self.lastPlayer
+                        end
+                        self.numInStreak = self.numInStreak + 1
+                    elseif STREAK_POINTS[self.numInStreak] then
+                        self.players[self.streakStarter].points = self.players[self.streakStarter].points + STREAK_POINTS[self.numInStreak]
+                        self.numInStreak = 0
+                        self.streakStarter = nil
                     end
 
                     self.players[self.currentPlayer]:update(newCycles)
+
+                    self.lastPlayer = self.currentPlayer
                     self.currentPlayer = math.max((self.currentPlayer + 1)%(self.numPlayers + 1), 1)
+                    self.moveNum = self.moveNum + 1
                     local h = (self.currentPlayer - 1) * gFonts['medium']:getHeight() + (2 * (self.currentPlayer - 1)) * gFonts['small']:getHeight()
-                    Timer.tween(1, {
+                    Timer.tween(0.5, {
                         [self.playerTriangle] = {y = h}
                     })
                     self.gameOver = self:checkGameOver()
                     if self.gameOver then
-                        bestPlayer = nil
-                        bestScore = 0
+                        if self.numInStreak > 0 then
+                            self.players[self.streakStarter].points = self.players[self.streakStarter].points + (STREAK_POINTS[self.numInStreak] or 0)
+                            self.numInStreak = 0
+                            self.streakStarter = nil
+                        end
 
                         bestArea = 0
                         bestPlayersArea = {}
 
                         for i, player in pairs(self.players) do
-                            if not bestPlayer or player.points > bestScore then
-                                bestPlayer = i
-                                bestScore = player.points
-                            end
-
                             if player.pentagonArea > bestArea then
                                 bestArea = player.pentagonArea
                                 bestPlayersArea = {i, }
@@ -188,6 +217,17 @@ function PlayState:update(dt)
                         for i, player in pairs(bestPlayersArea) do
                             self.players[player].points = self.players[player].points + points
                         end
+
+                        bestPlayer = nil
+                        bestScore = 0
+
+                        for i, player in pairs(self.players) do
+                            if not bestPlayer or player.points > bestScore then
+                                bestPlayer = i
+                                bestScore = player.points
+                            end
+                        end
+
 
                         gStateStack:push(GameOverState(bestPlayer, bestPlayersArea, self.players))
                     end
@@ -231,7 +271,6 @@ function PlayState:render()
 
         love.graphics.setColor(0, 0, 0)
 
-        shiftX = 100
         shiftY = gFonts['medium']:getHeight()
 
         for i, line in pairs(self.graph.edges) do
@@ -259,11 +298,31 @@ function PlayState:render()
         for i = 1, self.numPlayers do
             local h = (i - 1) * gFonts['medium']:getHeight() + (2 * (i - 1)) * gFonts['small']:getHeight()
             love.graphics.setFont(gFonts['medium'])
-            love.graphics.printf("Player " .. tostring(i), 0, h, VIRTUAL_WIDTH)
+            love.graphics.printf("Player " .. tostring(i), 0, h, shiftX)
 
             love.graphics.setFont(gFonts['small'])
-            love.graphics.printf("Points: " .. tostring(self.players[i].points), 0, h + gFonts['medium']:getHeight(), VIRTUAL_WIDTH)
-            love.graphics.printf("Area: " .. tostring(math.floor(self.players[i].pentagonArea, 0)), 0, h + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), VIRTUAL_WIDTH)
+            love.graphics.printf("Points: " .. tostring(self.players[i].points), 0, h + gFonts['medium']:getHeight(), shiftX)
+            love.graphics.printf("Area: " .. tostring(math.floor(self.players[i].pentagonArea, 0)), 0, h + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), shiftX)
         end
+    end
+
+    local y = self.numPlayers * gFonts['medium']:getHeight() + (2 * self.numPlayers) * gFonts['small']:getHeight() + 20
+    love.graphics.setFont(gFonts['small'])
+    headings = {'move', 'player', 'points'}
+    headingsX = {}
+    local x = 0
+    for i, heading in pairs(headings) do
+        love.graphics.printf(heading, x, y, VIRTUAL_WIDTH)
+        headingsX[heading] = x
+        x = x + gFonts['small']:getWidth(heading) + 10
+    end
+
+    y = y + gFonts['small']:getHeight()
+    for i = #self.pointLog, 1, - 1 do
+        message = self.pointLog[i]
+        for i, heading in pairs(headings) do
+            love.graphics.printf(message[heading], headingsX[heading], y, gFonts['small']:getWidth(heading), 'center')
+        end
+        y = y + gFonts['small']:getHeight()
     end
 end

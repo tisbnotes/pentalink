@@ -41,7 +41,7 @@ function LevelSelectState:init()
             ["arrowFunction"] = function(incr)
                 self.data[2].value = scaleIncrement(self.data[2].value, 1, MAX_PLAYERS, incr)
             end,
-            ["enter"] = function() end,
+            ["enter"] = function() self.data[1]['enter']() end,
             ["font"] = gFonts['medium-smaller'],
             ["value"] = 2
         },
@@ -50,7 +50,7 @@ function LevelSelectState:init()
             ["arrowFunction"] = function(incr)
                 self.data[3].value = scaleIncrement(self.data[3].value, 1, NUM_LEVELS, incr)
             end,
-            ["enter"] = function() end,
+            ["enter"] = function() self.data[1]['enter']() end,
             ["font"] = gFonts['medium-smaller'],
             ["randomval"] = NUM_LEVELS,
             ["value"] = 2
@@ -99,6 +99,50 @@ function LevelSelectState:update(dt)
     if love.keyboard.wasPressed('left') then
         self.data[self.highlighted + 1].arrowFunction(-1)
     end
+
+    if love.mouse.keysPressed[1] then
+        mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
+        local y = self.y
+        for i, object in pairs(self.data) do
+
+            if object.value then
+                y = y + object.font:getHeight()
+                love.graphics.printf(object.value, self.x, y, self.width, 'center')
+
+                object.value = object.value == object.randomval and 'random' or object.value
+                local objectStringLength = object.font:getWidth(tostring(object.value))
+                object.value = object.value == 'random' and NUM_LEVELS or object.value
+
+                local width = 20
+
+                local x = self.x + (self.width - objectStringLength) / 2 - 3 * width
+                local v = {x, y + object.font:getHeight() / 2, x + width, y, x + width, y + object.font:getHeight()}
+                if pointInPolygon({mouseX, mouseY}, v) then
+                    object.arrowFunction(-1)
+                    break
+                end
+
+                local x = self.x + (self.width + objectStringLength) / 2 + 2 * width
+                local v = {x + width, y + object.font:getHeight() / 2, x, y, x, y + object.font:getHeight()}
+                if pointInPolygon({mouseX, mouseY}, v) then
+                    object.arrowFunction(1)
+                    break
+                end
+            else
+                local object_width = object.font:getWidth(object.text)
+                local object_x = self.x + self.width/2 - object_width/2
+                local object_height = object.font:getHeight()
+                local v = {object_x, y, object_x + object_width, y, object_x + object_width, y + object_height, object_x, y + object_height}
+                if pointInPolygon({mouseX, mouseY}, v) then
+                    object.enter()
+                    break
+                end
+            end
+
+            y = y + object.font:getHeight() * 1.5
+        end
+    end
+
 end
 
 function LevelSelectState:render()
@@ -125,11 +169,15 @@ function LevelSelectState:render()
             love.graphics.printf(object.value, self.x, y, self.width, 'center')
 
             local width = 20
+
             local x = self.x + (self.width - object.font:getWidth(tostring(object.value))) / 2 - 3 * width
-            love.graphics.polygon('fill', {x, y + object.font:getHeight() / 2, x + width, y, x + width, y + object.font:getHeight()})
+            local v = {x, y + object.font:getHeight() / 2, x + width, y, x + width, y + object.font:getHeight()}
+            love.graphics.polygon('fill', v)
 
             local x = self.x + (self.width + object.font:getWidth(tostring(object.value))) / 2 + 2 * width
-            love.graphics.polygon('fill', {x + width, y + object.font:getHeight() / 2, x, y, x, y + object.font:getHeight()})
+            local v = {x + width, y + object.font:getHeight() / 2, x, y, x, y + object.font:getHeight()}
+            love.graphics.polygon('fill', v)
+
             object.value = object.value == 'random' and NUM_LEVELS or object.value
         end
 

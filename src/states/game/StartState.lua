@@ -3,7 +3,16 @@ StartState = Class{__includes = BaseState}
 function StartState:init()
     self.background = BackgroundState(1)
     self.highlighted = 0
-    self.options = {"Play", "Help", "Highscores"}
+    self.options = {
+        {
+            ["text"] = "Play",
+            ["enter"] = function() gStateStack:push(LevelSelectState()) end
+        },
+        {
+            ["text"] = "Rules",
+            ["enter"] = function() gStateStack:push(HelpState()) end
+        }
+    }
 end
 
 function StartState:update(dt)
@@ -23,10 +32,24 @@ function StartState:update(dt)
     end
 
     if love.keyboard.wasPressed('return') then
-        if self.highlighted == 0 then
-            gStateStack:push(LevelSelectState())
-        elseif self.highlighted == 1 then
-            gStateStack:push(HelpState())
+        self.options[self.highlighted + 1].enter()
+    end
+
+    if love.mouse.keysPressed[1] then
+        mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
+        for i, object in pairs(self.options) do
+            font = object.font or gFonts['medium']
+
+            local object_y = VIRTUAL_HEIGHT / 2 + (i - 1) * 1.5 * font:getHeight()
+            local object_width = font:getWidth(object.text)
+            local object_height = font:getHeight()
+            local object_x = 0 + VIRTUAL_WIDTH/2 - object_width/2
+            local v = {object_x, object_y, object_x + object_width, object_y, object_x + object_width, object_y + object_height, object_x, object_y + object_height}
+
+            if pointInPolygon({mouseX, mouseY}, v) then
+                object.enter()
+                break
+            end
         end
     end
 end
@@ -38,25 +61,18 @@ function StartState:render()
     love.graphics.setColor(255, 255, 255, 150)
     love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
 
-    -- love.graphics.setColor(245, 245, 245, 255)
-    -- local width = gFonts['medium']:getWidth('Highscores')
-    -- local height = (#self.options)*1.5*gFonts['medium']:getHeight()
-    -- local x = (VIRTUAL_WIDTH - gFonts['medium']:getWidth('Highscores'))/2
-    -- local y = VIRTUAL_HEIGHT/2
-    -- love.graphics.rectangle('fill', x, y, width, height, 10)
-
     love.graphics.setFont(gFonts['medium'])
     love.graphics.setColor(0, 0, 0, 200)
 
-    for i, option in ipairs(self.options) do
-        font = gFonts['medium']
+    for i, object in pairs(self.options) do
+        font = object.font or gFonts['medium']
         if self.highlighted + 1 == i then
             love.graphics.setColor(255, 0, 0, 200)
         else
             love.graphics.setColor(0, 0, 0, 200)
         end
         love.graphics.setFont(font)
-        love.graphics.printf(option, 0, VIRTUAL_HEIGHT/2 + (i-1)*1.5*gFonts['medium']:getHeight(), VIRTUAL_WIDTH, 'center')
+        love.graphics.printf(object.text, 0, VIRTUAL_HEIGHT / 2 + (i - 1) * 1.5 * font:getHeight(), VIRTUAL_WIDTH, 'center')
     end
 
     love.graphics.setFont(gFonts['large'])

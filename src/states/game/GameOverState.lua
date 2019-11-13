@@ -23,7 +23,7 @@ function GameOverState:init(winningPlayer, bestPlayersArea, players)
 end
 
 function GameOverState:update(dt)
-    if self.exitable and love.keyboard.wasPressed('return') then
+    if self.exitable and (love.keyboard.wasPressed('return') or love.mouse.keysPressed[1]) then
         gStateStack:push(FadeInState({r = 255, g = 255, b = 255}, 0.25, function()
             gStateStack:pop()
             gStateStack:pop()
@@ -46,7 +46,7 @@ function GameOverState:render()
     love.graphics.printf('Player ' .. tostring(self.winningPlayer) .. ' wins!', self.x, self.y + 10, self.width, 'left')
 
     local y = self.y + 10 + gFonts['medium-bigger']:getHeight() + 20
-    local points = #self.bestPlayersArea == 1 and 3 or 2
+    local points = #self.bestPlayersArea == 1 and MOST_AREA_POINTS or TIED_AREA_POINTS
     for i, player in pairs(self.players) do
         love.graphics.setFont(gFonts['medium'])
         love.graphics.printf('Player ' .. tostring(i), self.x, y + 10, self.width, 'left')

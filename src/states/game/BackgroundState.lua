@@ -39,8 +39,11 @@ function BackgroundState:updateAvailableEdges()
             if n1 ~= n2 and self:validLine({n1, n2}) then
                 table.insert(self.availableEdges, {n1, n2})
             end
-        end 
+        end
     end
+end
+
+function drawHashedOutImage()
 end
 
 function BackgroundState:render()
@@ -49,14 +52,22 @@ function BackgroundState:render()
     for i, cycle in pairs(self.cycles) do
         love.graphics.setColor(self.colorAllocation[cycle])
         local vertices = getVertices(cycle)
-        if convex then
-            love.graphics.polygon('fill', vertices)
-        else
-            triangles = love.math.triangulate(vertices)
-            for i, polygon_triangle in pairs(triangles) do
-                love.graphics.polygon('fill', polygon_triangle)
+        local function polygonStencilFunction()
+            if convex then
+                love.graphics.polygon('fill', vertices)
+            else
+                triangles = love.math.triangulate(vertices)
+                for i, polygon_triangle in pairs(triangles) do
+                    love.graphics.polygon('fill', polygon_triangle)
+                end
             end
         end
+
+        love.graphics.stencil(polygonStencilFunction, "replace", 1, false)
+
+        love.graphics.setStencilTest("greater", 0)
+        love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+        love.graphics.setStencilTest()
     end
 
     love.graphics.setColor(0, 0, 0)
@@ -75,7 +86,6 @@ function BackgroundState:render()
             love.graphics.setColor(0, 0, 0)
         end
         love.graphics.setFont(gFonts['small'])
-        love.graphics.print(tostring(i), point[1], point[2])
         love.graphics.circle('fill', point[1], point[2], 5)
     end
 end

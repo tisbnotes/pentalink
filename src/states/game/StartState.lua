@@ -3,7 +3,7 @@ StartState = Class{__includes = BaseState}
 function StartState:init()
   self.positions = {
     ['title'] = {x = 0, y = -gFonts['large']:getHeight()},
-    ['background'] = {x = 0, y = -VIRTUAL_HEIGHT},
+    ['background'] = {x = 0, y = VIRTUAL_HEIGHT},
     ['menu'] = {x = 0, y = VIRTUAL_HEIGHT}
   }
   Timer.tween(1, {
@@ -28,7 +28,6 @@ end
 function StartState:update(dt)
   mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
 
-  print("Mouse coordinates:", mouseX, mouseY)
     self.background:update()
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
@@ -56,7 +55,6 @@ function StartState:update(dt)
             local object_width = font:getWidth(object.text)
             local object_height = font:getHeight()
             local object_x = 0 + VIRTUAL_WIDTH/2 - object_width/2
-            print(object_x)
             local v = {object_x, object_y, object_x + object_width, object_y, object_x + object_width, object_y + object_height, object_x, object_y + object_height}
 
             if pointInPolygon({mouseX, mouseY}, v) then

@@ -10,6 +10,7 @@ function BackgroundState:init(levelnum)
     end
 
     self.graph = Graph(nodeNumbers)
+    self.projected = deepcopy(gPoints)
     self.cycles = {}
 
     self:updateAvailableEdges()
@@ -43,6 +44,17 @@ function BackgroundState:updateAvailableEdges()
     end
 end
 
+function BackgroundState:update(dt)
+    mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
+    self.projected = {}
+    for i,point in pairs(gPoints) do
+        local vec_x = mouseX - point[1]
+        local vec_y = mouseY - point[2]
+        local scale = POINT_MOVE_RADIUS / point_length(point[1], point[2], mouseX, mouseY)
+        table.insert(self.projected, {point[1] + vec_x*scale,point[2] + vec_y*scale})
+    end
+end
+
 function BackgroundState:render(position)
   self.position = position
   love.graphics.translate(self.position.x, self.position.y)
@@ -50,7 +62,9 @@ function BackgroundState:render(position)
 
     for i, cycle in pairs(self.cycles) do
         love.graphics.setColor(self.colorAllocation[cycle])
-        local vertices = getVertices(cycle)
+        local vertices = getVertices(cycle, self.projected)
+        print_r(self.projected)
+        print_r(gPoints)
         local function polygonStencilFunction()
             if convex then
                 love.graphics.polygon('fill', vertices)
@@ -75,10 +89,10 @@ function BackgroundState:render(position)
     shiftY = gFonts['medium']:getHeight()
 
     for i, line in pairs(self.graph.edges) do
-        love.graphics.line(gPoints[line[1]][1], gPoints[line[1]][2], gPoints[line[2]][1], gPoints[line[2]][2])
+        love.graphics.line(self.projected[line[1]][1], self.projected[line[1]][2], self.projected[line[2]][1], self.projected[line[2]][2])
     end
 
-    for i, point in pairs(gPoints) do
+    for i, point in pairs(self.projected) do
         if self.selected == i then
             love.graphics.setColor(255, 0, 0)
         else

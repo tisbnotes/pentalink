@@ -221,10 +221,11 @@ function shoelace(pset)
     return math.abs(area / 2.0)
 end
 
-function getVertices(cycle)
+function getVertices(cycle, point_list)
+    point_list = point_list or gPoints
     local vertices = {}
     for j, nodeNumber in pairs(cycle) do
-        vertices = table.concatenate(vertices, gPoints[nodeNumber])
+        vertices = table.concatenate(vertices, point_list[nodeNumber])
     end
     return vertices
 end

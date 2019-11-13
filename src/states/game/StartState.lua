@@ -1,7 +1,17 @@
 StartState = Class{__includes = BaseState}
 
 function StartState:init()
-    self.background = BackgroundState(1)
+  self.positions = {
+    ['title'] = {x = 0, y = -gFonts['large']:getHeight()},
+    ['background'] = {x = 0, y = -VIRTUAL_HEIGHT},
+    ['menu'] = {x = 0, y = VIRTUAL_HEIGHT}
+  }
+  Timer.tween(1, {
+      [self.positions['title']] = {y = VIRTUAL_HEIGHT / 2 - gFonts['large']:getHeight()},
+      [self.positions['background']] = {y = 0},
+      [self.positions['menu']] = {y = 0}
+  })
+    self.background = BackgroundState(3)
     self.highlighted = 0
     self.options = {
         {
@@ -16,6 +26,9 @@ function StartState:init()
 end
 
 function StartState:update(dt)
+  mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
+
+  print("Mouse coordinates:", mouseX, mouseY)
     self.background:update()
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
@@ -36,7 +49,6 @@ function StartState:update(dt)
     end
 
     if love.mouse.keysPressed[1] then
-        mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
         for i, object in pairs(self.options) do
             font = object.font or gFonts['medium']
 
@@ -44,6 +56,7 @@ function StartState:update(dt)
             local object_width = font:getWidth(object.text)
             local object_height = font:getHeight()
             local object_x = 0 + VIRTUAL_WIDTH/2 - object_width/2
+            print(object_x)
             local v = {object_x, object_y, object_x + object_width, object_y, object_x + object_width, object_y + object_height, object_x, object_y + object_height}
 
             if pointInPolygon({mouseX, mouseY}, v) then
@@ -57,13 +70,14 @@ end
 function StartState:render()
     love.graphics.clear(255, 255, 255, 50)
 
-    self.background:render()
+    self.background:render(self.positions['background'])
     love.graphics.setColor(255, 255, 255, 150)
     love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
 
     love.graphics.setFont(gFonts['medium'])
     love.graphics.setColor(0, 0, 0, 200)
 
+    love.graphics.translate(self.positions['menu'].x, self.positions['menu'].y)
     for i, object in pairs(self.options) do
         font = object.font or gFonts['medium']
         if self.highlighted + 1 == i then
@@ -74,8 +88,9 @@ function StartState:render()
         love.graphics.setFont(font)
         love.graphics.printf(object.text, 0, VIRTUAL_HEIGHT / 2 + (i - 1) * 1.5 * font:getHeight(), VIRTUAL_WIDTH, 'center')
     end
+    love.graphics.translate(-self.positions['menu'].x, -self.positions['menu'].y)
 
     love.graphics.setFont(gFonts['large'])
     love.graphics.setColor(0, 0, 0, 255)
-    love.graphics.printf("PENTALINK", 0, VIRTUAL_HEIGHT / 2 - gFonts['large']:getHeight(), VIRTUAL_WIDTH, 'center')
+    love.graphics.printf("PENTALINK", 0, self.positions['title'].y, VIRTUAL_WIDTH, 'center')
 end

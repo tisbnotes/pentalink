@@ -1,7 +1,7 @@
 BackgroundState = Class{__includes = PlayState}
 
-function BackgroundState:init(levelNum)
-    local level = generateLevel(3)
+function BackgroundState:init(levelnum)
+    local level = generateLevel(levelnum)
     gPoints = level.points
 
     nodeNumbers = {}
@@ -43,10 +43,9 @@ function BackgroundState:updateAvailableEdges()
     end
 end
 
-function drawHashedOutImage()
-end
-
-function BackgroundState:render()
+function BackgroundState:render(position)
+  self.position = position
+  love.graphics.translate(self.position.x, self.position.y)
     love.graphics.clear(255, 255, 255, 255)
 
     for i, cycle in pairs(self.cycles) do
@@ -88,4 +87,5 @@ function BackgroundState:render()
         love.graphics.setFont(gFonts['small'])
         love.graphics.circle('fill', point[1], point[2], 5)
     end
+    love.graphics.translate(-self.position.x, -self.position.y)
 end

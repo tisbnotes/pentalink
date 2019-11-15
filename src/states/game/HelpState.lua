@@ -1,6 +1,15 @@
 HelpState = Class{__includes = BaseState}
 
 function HelpState:init()
+    self.buttons = {
+        Button(
+            gTextures['buttons']['exit'],
+            VIRTUAL_WIDTH - ICON_SIZE, 0, ICON_SIZE, ICON_SIZE,
+            function()
+                self:fadeOutAndPop()
+            end
+        ),
+    }
     cameraX = 0
     cameraY = 0
 
@@ -13,7 +22,8 @@ function HelpState:init()
     self.colors = {
         ['panel'] = {245, 245, 245, 0},
         ['background'] = {245, 245, 245, 0},
-        ['text'] = {0, 0, 0, 0}
+        ['text'] = {0, 0, 0, 0},
+        ['scrollbar'] = {0, 0, 0, 0}
     }
 
     self.fonts = {
@@ -25,22 +35,25 @@ function HelpState:init()
     Timer.tween(0.25, {
         [self.colors['panel']] = {[4] = 255},
         [self.colors['text']] = {[4] = 255},
-        [self.colors['background']] = {[4] = 200}
+        [self.colors['background']] = {[4] = 200},
+        [self.colors['scrollbar']] = {[4] = 200}
     })
 
     self.bottomY = -VIRTUAL_WIDTH * 2
-    self.scrollbar = ScrollBar(VIRTUAL_WIDTH - 20, 0, self.bottomY, 10, 2 * VIRTUAL_HEIGHT/3)
+    self.scrollbar = ScrollBar(20, 0, self.bottomY, 10, 2 * VIRTUAL_HEIGHT/3)
 end
 
 function HelpState:fadeOutAndPop()
     Timer.tween(0.25, {
         [self.colors['panel']] = {[4] = 0},
         [self.colors['text']] = {[4] = 0},
-        [self.colors['background']] = {[4] = 0}
+        [self.colors['background']] = {[4] = 0},
+        [self.colors['scrollbar']] = {[4] = 0}
     }):finish(function() gStateStack:pop() end)
 end
 
 function HelpState:update(dt)
+    gStateStack.states[1].background:update(dt)
     if love.keyboard.wasPressed('escape') or love.keyboard.wasPressed('return') then
         self:fadeOutAndPop()
     end
@@ -55,6 +68,9 @@ function HelpState:update(dt)
         cameraY = math.max(cameraY, 0)
     end
     self.scrollbar:updateValue(cameraY)
+    for i, button in pairs(self.buttons) do
+        button:update()
+    end
 end
 
 function HelpState:render()
@@ -65,7 +81,7 @@ function HelpState:render()
     -- transluscent background
     love.graphics.setColor(self.colors['background'])
     love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-    self.scrollbar:render()
+    self.scrollbar:render(self.colors['scrollbar'])
 
     -- panel
     love.graphics.setColor(self.colors['panel'])
@@ -95,4 +111,11 @@ function HelpState:render()
     end
     self.bottomY = y
     self.scrollbar.range = y - VIRTUAL_HEIGHT
+
+    love.graphics.translate(cameraX, cameraY)
+
+    for i, button in pairs(self.buttons) do
+        button:render()
+    end
+
 end

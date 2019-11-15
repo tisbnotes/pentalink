@@ -27,6 +27,7 @@ require 'src/states/game/BackgroundState'
 require 'src/gui/Textbox'
 require 'src/gui/Panel'
 require 'src/gui/ScrollBar'
+require 'src/gui/Button'
 
 gFonts = {
     ['small'] = love.graphics.newFont('fonts/Antaro.ttf', 20),
@@ -41,4 +42,13 @@ gFonts = {
 gSounds = {
     ['menu-select'] = love.audio.newSource('sounds/menu_select.wav'),
     ['deny-connection'] = love.audio.newSource('sounds/deny_connection.wav')
+}
+
+gTextures = {
+    ['buttons'] = {
+        ['exit'] = love.graphics.newImage('graphics/buttons/exit.png'),
+        ['home'] = love.graphics.newImage('graphics/buttons/home.png'),
+        ['undo'] = love.graphics.newImage('graphics/buttons/undo.png'),
+        ['hamburger'] = love.graphics.newImage('graphics/buttons/hamburger.png')
+    }
 }

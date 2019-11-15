@@ -1,5 +1,4 @@
 function generateLevel(n)
-    print(n)
     local level = {
         ['points'] = {},
         ['edges'] = {}
@@ -79,8 +78,42 @@ function generateLevel(n)
             ['edges'] = {
             }
         }
+    elseif n == 3 then
+        level = {
+            ['points'] = {
+                {1 / 12 * VIRTUAL_WIDTH, 4 / 8 * VIRTUAL_HEIGHT},
+                {2 / 12 * VIRTUAL_WIDTH, 2 / 8 * VIRTUAL_HEIGHT},
+                {3 / 12 * VIRTUAL_WIDTH, 1 / 8 * VIRTUAL_HEIGHT},
+                {4 / 12 * VIRTUAL_WIDTH, 1 / 8 * VIRTUAL_HEIGHT},
+                {5 / 12 * VIRTUAL_WIDTH, 4 / 8 * VIRTUAL_HEIGHT},
+                {6 / 12 * VIRTUAL_WIDTH, 3 / 8 * VIRTUAL_HEIGHT},
+                {7 / 12 * VIRTUAL_WIDTH, 4 / 8 * VIRTUAL_HEIGHT},
+                {6 / 12 * VIRTUAL_WIDTH, 5 / 8 * VIRTUAL_HEIGHT},
+                {8 / 12 * VIRTUAL_WIDTH, 1 / 8 * VIRTUAL_HEIGHT},
+                {9 / 12 * VIRTUAL_WIDTH, 1 / 8 * VIRTUAL_HEIGHT},
+                {10 / 12 * VIRTUAL_WIDTH, 2 / 8 * VIRTUAL_HEIGHT},
+                {11 / 12 * VIRTUAL_WIDTH, 4 / 8 * VIRTUAL_HEIGHT},
+                {10 / 12 * VIRTUAL_WIDTH, 6 / 8 * VIRTUAL_HEIGHT},
+                {9 / 12 * VIRTUAL_WIDTH, 7 / 8 * VIRTUAL_HEIGHT},
+                {8 / 12 * VIRTUAL_WIDTH, 7 / 8 * VIRTUAL_HEIGHT},
+                {4 / 12 * VIRTUAL_WIDTH, 7 / 8 * VIRTUAL_HEIGHT},
+                {3 / 12 * VIRTUAL_WIDTH, 7 / 8 * VIRTUAL_HEIGHT},
+                {2 / 12 * VIRTUAL_WIDTH, 6 / 8 * VIRTUAL_HEIGHT},
+            },
+            ['edges'] = {
+                {3, 4},
+                {5, 6},
+                {6, 7},
+                {7, 8},
+                {5, 8},
+                {9, 10},
+                {14, 15},
+                {16, 17}
+            }
+        }
+        return level
     elseif n == NUM_LEVELS then
-        nPoints = 20
+        nPoints = RANDOM_LEVEL_POINTS
         level = {
             ['points'] = {},
             ['edges'] = {}

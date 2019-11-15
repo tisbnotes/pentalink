@@ -1,13 +1,20 @@
 LevelSelectState = Class{__includes = BaseState}
 
-function LevelSelectState:init()
+function LevelSelectState:init(data)
+    self.buttons = {
+        Button(
+            gTextures['buttons']['exit'],
+            VIRTUAL_WIDTH - ICON_SIZE, 0, ICON_SIZE, ICON_SIZE,
+            function()
+                Timer.tween(0.25, {
+                    [self.colors['panel']] = {[4] = 0},
+                    [self.colors['text']] = {[4] = 0},
+                    [self.colors['background']] = {[4] = 0}
+                }):finish(function() gStateStack:pop() end)
+            end
+        ),
+    }
     -- object data
-    self.width = VIRTUAL_WIDTH / 4
-    self.height = VIRTUAL_HEIGHT / 2
-
-    self.x = (VIRTUAL_WIDTH - self.width) / 2
-    self.y = (VIRTUAL_HEIGHT - self.height) / 2
-
     self.colors = {
         ['panel'] = {245, 245, 245, 0},
         ['background'] = {255, 255, 255, 0},
@@ -21,57 +28,30 @@ function LevelSelectState:init()
     })
 
     -- data about game
-    self.data = {
-        {
-            ["arrowFunction"] = function(incr) end,
-            ["enter"] = function()
-                gStateStack:push(FadeInState({r = 255, g = 255, b = 255}, 0.2, function()
-                    gStateStack:pop()
-                    gStateStack:pop()
-                    gStateStack:push(PlayState(self.data[2].value, self.data[3].value))
-                    gStateStack:push(FadeOutState({r = 255, g = 255, b = 255}, 0.2, function()
-                    end))
-                end))
-            end,
-            ["text"] = "Start",
-            ["font"] = gFonts['medium-bigger']
-        },
-        {
-            ["text"] = "Number of players",
-            ["arrowFunction"] = function(incr)
-                self.data[2].value = scaleIncrement(self.data[2].value, 1, MAX_PLAYERS, incr)
-            end,
-            ["enter"] = function() self.data[1]['enter']() end,
-            ["font"] = gFonts['medium-smaller'],
-            ["value"] = 2
-        },
-        {
-            ["text"] = "Level",
-            ["arrowFunction"] = function(incr)
-                self.data[3].value = scaleIncrement(self.data[3].value, 1, NUM_LEVELS, incr)
-            end,
-            ["enter"] = function() self.data[1]['enter']() end,
-            ["font"] = gFonts['medium-smaller'],
-            ["randomval"] = NUM_LEVELS,
-            ["value"] = 2
-        },
-        {
-            ["text"] = "Go back",
-            ["arrowFunction"] = function(incr) end,
-            ["enter"] = function()
-                Timer.tween(0.25, {
-                    [self.colors['panel']] = {[4] = 0},
-                    [self.colors['text']] = {[4] = 0},
-                    [self.colors['background']] = {[4] = 0}
-                }):finish(function() gStateStack:pop() end)
-            end,
-            ["font"] = gFonts['medium-bigger'],
-        },
-    }
+    self.data = data
     self.highlighted = 0
+
+    self.height = 0
+
+    for i, object in pairs(self.data) do
+        love.graphics.setFont(object.font)
+        if object.value then
+            self.height = self.height + object.font:getHeight()
+        end
+        self.height = self.height + object.font:getHeight() * 1.5
+    end
+
+    self.width = VIRTUAL_WIDTH / 4
+
+    self.x = (VIRTUAL_WIDTH - self.width) / 2
+    self.y = (VIRTUAL_HEIGHT - self.height) / 2
 end
 
 function LevelSelectState:update(dt)
+    for i, button in pairs(self.buttons) do
+        button:update()
+    end
+    gStateStack.states[1].background: update(dt)
     if love.keyboard.wasPressed('escape') then
         Timer.tween(0.25, {
             [self.colors['panel']] = {[4] = 0},
@@ -130,7 +110,7 @@ function LevelSelectState:update(dt)
                 end
             else
                 local object_width = object.font:getWidth(object.text)
-                local object_x = self.x + self.width/2 - object_width/2
+                local object_x = self.x + self.width / 2 - object_width / 2
                 local object_height = object.font:getHeight()
                 local v = {object_x, y, object_x + object_width, y, object_x + object_width, y + object_height, object_x, y + object_height}
                 if pointInPolygon({mouseX, mouseY}, v) then
@@ -182,5 +162,9 @@ function LevelSelectState:render()
         end
 
         y = y + object.font:getHeight() * 1.5
+    end
+
+    for i, button in pairs(self.buttons) do
+        button:render()
     end
 end

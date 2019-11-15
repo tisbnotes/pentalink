@@ -3,7 +3,7 @@ require 'src/Dependencies'
 function love.load()
     love.physics.setMeter(METRE_LENGTH)
     love.window.setTitle('Pentalink')
-    love.graphics.setDefaultFilter('linear', 'linear')
+    -- love.graphics.setDefaultFilter('nearest', 'nearest')
 
     math.randomseed(os.time())
 

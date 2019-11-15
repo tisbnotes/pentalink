@@ -26,6 +26,10 @@ function Graph:add_edge(n1, n2, c)
     table.insert(self.edges, {n1, n2, c})
 end
 
+function Graph:add_node(node)
+    self.nodes[node] = {}
+end
+
 function floyd_warshall(G)
     distance = {}
     next_v = {}

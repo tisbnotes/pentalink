@@ -14,7 +14,8 @@ function ScrollBar:updateValue(value)
     self.y = (VIRTUAL_HEIGHT - self.height) * (value/self.range)
 end
 
-function ScrollBar:render()
-    love.graphics.setColor(50, 50, 50, 255)
+function ScrollBar:render(color)
+    color = color or {50, 50, 50, 255}
+    love.graphics.setColor(color)
     love.graphics.rectangle('fill', self.x, self.y, self.width, self.height, 10)
 end

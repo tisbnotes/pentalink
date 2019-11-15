@@ -1,6 +1,27 @@
 PlayState = Class{__includes = BaseState}
 
 function PlayState:init(numPlayers, levelNum)
+    self.buttons = {
+        Button(
+            gTextures['buttons']['hamburger'],
+            VIRTUAL_WIDTH - ICON_SIZE, 0, ICON_SIZE, ICON_SIZE,
+            function()
+                gStateStack:push(FadeInState({r = 255, g = 255, b = 255}, 0.2, function()
+                    gStateStack:pop()
+                    gStateStack:push(StartState())
+                    gStateStack:push(FadeOutState({r = 255, g = 255, b = 255}, 0.2, function()
+                    end))
+                end))
+            end
+        ),
+        -- Button(
+        --     gTextures['buttons']['undo'],
+        --     VIRTUAL_WIDTH - ICON_SIZE * 2, 0, ICON_SIZE, ICON_SIZE,
+        --     function()
+        --         -- self:undoMove()
+        --     end
+        -- )
+    }
     self.level = generateLevel(levelNum)
 
     self.playerTriangle = Triangle(gFonts['medium']:getWidth('Player 1   '), 0, 25, gFonts['medium']:getHeight() - 10)
@@ -31,17 +52,19 @@ function PlayState:init(numPlayers, levelNum)
     end
     self.currentPlayer = 1
 
-    self.cycles = {}
     self.graph = Graph(nodeNumbers)
 
     for i, edge in pairs(self.level.edges) do
         self.graph:add_edge(edge[1], edge[2])
     end
 
+    self.cycles = minimum_cycle_basis(self.graph)
+
     self.selected = nil
 end
 
 function PlayState:checkGameOver()
+    -- return false
     for n1 = 1, #gPoints do
         for n2 = 1, #gPoints do
             if n1 ~= n2 and self:validLine({n1, n2}) then
@@ -101,13 +124,6 @@ function PlayState:validLine(line1)
         ::continue::
     end
 
-    -- check whether the line is trying to connect two cycles together
-    -- for i, cycle in pairs(self.cycles) do
-    --     if table.contains(cycle, line1[1]) and table.contains(cycle, line1[2]) then
-    --         return false
-    --     end
-    -- end
-
     return true
 end
 
@@ -137,6 +153,9 @@ function validateCycle(cycle)
 end
 
 function PlayState:update(dt)
+    for i, button in pairs(self.buttons) do
+        button:update()
+    end
     mouseX, mouseY = push:toGame(love.mouse.getX(), love.mouse.getY())
     if love.mouse.keysPressed[1] and not self.gameover then
         if self.selected then
@@ -213,7 +232,7 @@ function PlayState:update(dt)
                             end
                         end
 
-                        local points = #bestPlayersArea == 1 and 3 or 2
+                        local points = #bestPlayersArea == 1 and MOST_AREA_POINTS or TIED_AREA_POINTS
                         for i, player in pairs(bestPlayersArea) do
                             self.players[player].points = self.players[player].points + points
                         end
@@ -243,67 +262,69 @@ function PlayState:update(dt)
                     self.selected = i
                 end
             end
+            -- if not self.selected then
+            --     table.insert(gPoints, {mouseX, mouseY})
+            --     self.graph:add_node(#gPoints)
+            -- end
         end
     end
 end
 
 function PlayState:render()
-    if not self.gameover then
-        love.graphics.clear(255, 255, 255, 255)
-        self.playerTriangle:render()
+    love.graphics.clear(255, 255, 255, 255)
+    self.playerTriangle:render()
 
-        for i, cycle in pairs(self.cycles) do
-            if #cycle == 5 then
-                love.graphics.setColor(255, 0, 0, 200)
-            else
-                love.graphics.setColor(194, 197, 204, 200)
-            end
-            local vertices = getVertices(cycle)
-            if convex then
-                love.graphics.polygon('fill', vertices)
-            else
-                triangles = love.math.triangulate(vertices)
-                for i, polygon_triangle in pairs(triangles) do
-                    love.graphics.polygon('fill', polygon_triangle)
-                end
-            end
-        end
-
-        love.graphics.setColor(0, 0, 0)
-
-        shiftY = gFonts['medium']:getHeight()
-
-        for i, line in pairs(self.graph.edges) do
-            love.graphics.line(gPoints[line[1]][1], gPoints[line[1]][2], gPoints[line[2]][1], gPoints[line[2]][2])
-        end
-
-        for i, point in pairs(gPoints) do
-            if self.selected == i then
-                love.graphics.setColor(255, 0, 0)
-            else
-                love.graphics.setColor(0, 0, 0)
-            end
-            love.graphics.setFont(gFonts['small'])
-            love.graphics.print(tostring(i), point[1], point[2])
-            love.graphics.circle('fill', point[1], point[2], 5)
-        end
-
-        love.graphics.setColor(0, 0, 0)
-        love.graphics.setFont(gFonts['medium-bigger'])
-        if self.gameOver then
-            love.graphics.printf("Game over.", 0, 0, VIRTUAL_WIDTH, 'center')
+    for i, cycle in pairs(self.cycles) do
+        if #cycle == 5 then
+            love.graphics.setColor(255, 0, 0, 200)
         else
-            love.graphics.printf("Player " .. tostring(self.currentPlayer) .. "'s turn!", 0, 0, VIRTUAL_WIDTH, 'center')
+            love.graphics.setColor(194, 197, 204, 200)
         end
-        for i = 1, self.numPlayers do
-            local h = (i - 1) * gFonts['medium']:getHeight() + (2 * (i - 1)) * gFonts['small']:getHeight()
-            love.graphics.setFont(gFonts['medium'])
-            love.graphics.printf("Player " .. tostring(i), 0, h, shiftX)
+        local vertices = getVertices(cycle)
+        if convex then
+            love.graphics.polygon('fill', vertices)
+        else
+            triangles = love.math.triangulate(vertices)
+            for i, polygon_triangle in pairs(triangles) do
+                love.graphics.polygon('fill', polygon_triangle)
+            end
+        end
+    end
 
-            love.graphics.setFont(gFonts['small'])
-            love.graphics.printf("Points: " .. tostring(self.players[i].points), 0, h + gFonts['medium']:getHeight(), shiftX)
-            love.graphics.printf("Area: " .. tostring(math.floor(self.players[i].pentagonArea, 0)), 0, h + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), shiftX)
+    love.graphics.setColor(0, 0, 0)
+
+    shiftY = gFonts['medium']:getHeight()
+
+    for i, line in pairs(self.graph.edges) do
+        love.graphics.line(gPoints[line[1]][1], gPoints[line[1]][2], gPoints[line[2]][1], gPoints[line[2]][2])
+    end
+
+    for i, point in pairs(gPoints) do
+        if self.selected == i then
+            love.graphics.setColor(255, 0, 0)
+        else
+            love.graphics.setColor(0, 0, 0)
         end
+        love.graphics.setFont(gFonts['small'])
+        love.graphics.print(tostring(i), point[1], point[2])
+        love.graphics.circle('fill', point[1], point[2], 5)
+    end
+
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.setFont(gFonts['medium-bigger'])
+    if self.gameOver then
+        love.graphics.printf("Game over.", 0, 0, VIRTUAL_WIDTH, 'center')
+    else
+        love.graphics.printf("Player " .. tostring(self.currentPlayer) .. "'s turn!", 0, 0, VIRTUAL_WIDTH, 'center')
+    end
+    for i = 1, self.numPlayers do
+        local h = (i - 1) * gFonts['medium']:getHeight() + (2 * (i - 1)) * gFonts['small']:getHeight()
+        love.graphics.setFont(gFonts['medium'])
+        love.graphics.printf("Player " .. tostring(i), 0, h, shiftX)
+
+        love.graphics.setFont(gFonts['small'])
+        love.graphics.printf("Points: " .. tostring(self.players[i].points), 0, h + gFonts['medium']:getHeight(), shiftX)
+        love.graphics.printf("Area: " .. tostring(math.floor(self.players[i].pentagonArea, 0)), 0, h + gFonts['medium']:getHeight() + gFonts['small']:getHeight(), shiftX)
     end
 
     local y = self.numPlayers * gFonts['medium']:getHeight() + (2 * self.numPlayers) * gFonts['small']:getHeight() + 20
@@ -324,5 +345,9 @@ function PlayState:render()
             love.graphics.printf(message[heading], headingsX[heading], y, gFonts['small']:getWidth(heading), 'center')
         end
         y = y + gFonts['small']:getHeight()
+    end
+
+    for i, button in pairs(self.buttons) do
+        button:render()
     end
 end

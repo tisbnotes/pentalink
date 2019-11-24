@@ -1,21 +1,23 @@
-self.buttons = {
-    Button(
-        gTextures['exit_button'],
-        VIRTUAL_WIDTH - 75, 0, 75, 75,
-        function()
-            Timer.tween(0.25, {
-                [self.colors['panel']] = {[4] = 0},
-                [self.colors['text']] = {[4] = 0},
-                [self.colors['background']] = {[4] = 0}
-            }):finish(function() gStateStack:pop() end)
-        end
-    ),
-}
+local numplayers = gStateStack.states[#gStateStack.states].data[2].value
+local level = gStateStack.states[#gStateStack.states].data[3].value
 
-for i, button in pairs(self.buttons) do
-    button:update()
-end
+gStateStack:push(
+    LevelSelectState(
+        {
+            {
+                ['text'] = "GO!",
+                ['arrowFunction'] = function(incr) end,
+                ['enter'] = function() end,
+                ["font"] = gFonts['medium-bigger'],
+            }
+        }
+    )
+)
 
-for i, button in pairs(self.buttons) do
-    button:render()
-end
+
+
+
+gStateStack:pop()
+gStateStack:pop()
+gStateStack:push(PlayState(numplayers, level))
+gStateStack:push(FadeOutState({r = 255, g = 255, b = 255}, 0.2, function() end))
